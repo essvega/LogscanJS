@@ -5,7 +5,17 @@ var listado = [];
 var googleipsused = [];
 var kalayips = [];
 var cognitousedips = [];
+var tutkips = [];
+var ntpsips = [];
+var awsstaging = [];
 
+var ourpublicipadd = ["4.16.177.238"];
+
+var salvalistado = [];
+
+var hey = [/\b(\w*kalay\w*)\b/gi, /\b(\w*google\w*)\b/gi, /\b(\w*cognito\w*)\b/gi, /\b(\w*tutk\w*)\b/gi, /\b(\w*ntp\w*)\b/gi, /\b(\w*staging\w*)\b/gi];
+var hoh = [kalayips, googleipsused, cognitousedips, tutkips, ntpsips, awsstaging];
+var gray = /[0-2]{0,1}[0-9]{0,1}[0-9]{1}\.[1-2]{0,1}[0-9]{0,1}[0-9]{1}\.[1-2]{0,1}[0-9]{0,1}[0-9]{1}\.[1-2]{0,1}[0-9]{0,1}[0-9]{1}/g;
 
 /*
 0.0.0.0/8	"This" network
@@ -38,7 +48,6 @@ fs.readdir('./', (err, files) =>{
         if(path.extname(file) == ".txt"){
             //console.log("HEY");
             toread(file);
-            
         }
         
     });
@@ -56,55 +65,66 @@ function toread(file){
             for(let i = 0; i < tre.length; i++){
                 stre = tre[i];
                 //console.log(stre);
-                scanpips();
-                scangoogleips();
-                scankalayips();
-                cognituused();
+                scanpips(gray, listado);
+                runregex();
                 fixtables();
-               
+                //fir();
             }
+            
+            //find();
             console.log(path.basename(file));
-            console.log(listado);
+            //console.log(listado);
             // To pass cleaner multiple times to clean all Bogon and Private IP Addresses 
            
             loopingremove(listado);
 
-            console.log("===================");
-            console.log(listado);
-            console.log("===================")
-
-
-            
-
-
-        }
-        
-
-        if(googleipsused.length > 0){
-            console.log("___________________________________________");
-            console.log("IPs used from Kalay at: " + path.basename(file));
-            console.log(kalayips);
-
-            console.log("___________________________________________");
-            console.log("IPs used from GOOGLE at: " + path.basename(file));
-            console.log(googleipsused);
-
-            console.log("___________________________________________");
-            console.log("IPs received by DNS for Cognito AWS at: " + path.basename(file));
-            console.log(cognitousedips);
-
-            console.log("___________________________________________");
-            console.log("IPs used by DVR at: " + path.basename(file));
-            console.log(listado);    
-
-
-            
+            salvalistado = listado;
+            //console.log("===================");
+            //console.log(listado);
+            //console.log("===================")
             listado = [];
-        }
-        
-        
-    });
+            if(awsstaging.length > 0){
+                
+                
+                console.log("___________________________________________");
+                console.log("IPs used from Kalay at: " + path.basename(file));
+                console.log(kalayips);
     
+                console.log("___________________________________________");
+                console.log("IPs used from GOOGLE at: " + path.basename(file));
+                console.log(googleipsused);
+    
+                console.log("___________________________________________");
+                console.log("IPs received by DNS for Cognito AWS at: " + path.basename(file));
+                console.log(cognitousedips);
+    
+                console.log("___________________________________________");
+                console.log("IPs used by Staging server in AWS: " + path.basename(file));
+                console.log(awsstaging);
+
+                console.log("___________________________________________");
+                console.log("IPs used by DVR from TUTK: " + path.basename(file));
+                console.log(tutkips);  
+                
+                console.log("___________________________________________");
+                console.log("IPs used by DVR from NTP server pool.ntp.org: " + path.basename(file));
+                console.log(ntpsips);  
+    
+                console.log("___________________________________________");
+                console.log("Our Public Address from ISP provider: " + path.basename(file));
+                console.log(ourpublicipadd);  
+    
+                
+                console.log("___________________________________________");
+                console.log("UNKOWN!!!! IPs used by DVR at: " + path.basename(file));
+                console.log(salvalistado);   
+                
+                
+                
+                unkownscan(file);
+            }       
+        }        
+    });   
 }
 
 function selectnonrepeat(ip, li){
@@ -140,8 +160,8 @@ function removeprivateip(li){
     }
 }
 
-function scanpips(){
-    var r = stre.match(/[0-2]{0,1}[0-9]{0,1}[0-9]{1}\.[1-2]{0,1}[0-9]{0,1}[0-9]{1}\.[1-2]{0,1}[0-9]{0,1}[0-9]{1}\.[1-2]{0,1}[0-9]{0,1}[0-9]{1}/g);
+function scanpips(stringmatch, objecttabe){
+    var r = stre.match(stringmatch);
                 
     if(r){    
             var len = r.length;
@@ -151,98 +171,51 @@ function scanpips(){
                     //console.log("****************");
                     //console.log(r[p]);
                     //console.log("*****************");                                
-                    selectnonrepeat(r[p], listado);
+                    selectnonrepeat(r[p], objecttabe);
                 }
             }else{
                 //console.log("///////////////");
                 //console.log(r[0]);
                 //console.log("//////////////");
-                selectnonrepeat(r[0], listado);
+                selectnonrepeat(r[0], objecttabe);
             }
         }
 }
 
-/* TO SCAN IP ADDRESSES in KALAY services */
-function scankalayips(){
-    var dnss = stre.match(/\b(\w*kalay\w*)\b/gi);
-               
-    if(dnss){
-        //console.log(stre);
-        var r = stre.match(/[0-2]{0,1}[0-9]{0,1}[0-9]{0,1}\.[1-2]{0,1}[0-9]{0,1}[0-9]{1}\.[1-2]{0,1}[0-9]{0,1}[0-9]{1}\.[1-2]{0,1}[0-9]{0,1}[0-9]{1}/g);
-                
-        if(r){    
-                var len = r.length;
+
+function scanpipsforkey(stringmatch, objecttabe){
+    var r = stre.match(stringmatch);
+    //console.log(stre);                
+    if(r){   
+            var lios = stre.match(gray); 
+            
+            if(lios){
+                var len = lios.length;
                 //console.log(len);
                 if(len > 1){
                     for(let p = 0; p < len; p++){
                         //console.log("****************");
                         //console.log(r[p]);
                         //console.log("*****************");                                
-                        selectnonrepeat(r[p], kalayips);
+                        selectnonrepeat(lios[p], objecttabe);
                     }
                 }else{
                     //console.log("///////////////");
                     //console.log(r[0]);
                     //console.log("//////////////");
-                    selectnonrepeat(r[0], kalayips);
+                    selectnonrepeat(lios[0], objecttabe);
                 }
-            }
-            removeprivateip(kalayips);
+            }            
+            removeprivateip(objecttabe);
+        }
+}
+
+function runregex(){
+    for(let i = 0; i < hey.length; i++){
+        scanpipsforkey(hey[i], hoh[i]);
     }
 }
 
-function scangoogleips(){
-    var rrr = stre.match(/\b(\w*google\w*)\b/gi);
-    if(rrr){
-        var r = stre.match(/[0-2]{0,1}[0-9]{0,1}[0-9]{0,1}\.[1-2]{0,1}[0-9]{0,1}[0-9]{1}\.[1-2]{0,1}[0-9]{0,1}[0-9]{1}\.[1-2]{0,1}[0-9]{0,1}[0-9]{1}/g);     
-        if(r){    
-                var len = r.length;
-                //console.log(len);
-                if(len > 1){
-                    for(let p = 0; p < len; p++){
-                        //console.log("****************");
-                        //console.log(r[p]);
-                        //console.log("*****************");                                
-                        selectnonrepeat(r[p], googleipsused);
-                    }
-                }else{
-                    //console.log("///////////////");
-                    //console.log(r[0]);
-                    //console.log("//////////////");
-                    selectnonrepeat(r[0], googleipsused);
-                }
-            }
-            removeprivateip(googleipsused);
-    }
-}
-
-
-function cognituused(){
-    var rrr = stre.match(/\b(\w*cognito\w*)\b/gi);
-    if(rrr){
-        //console.log(stre);
-        //console.log(stre);
-        var r = stre.match(/[0-2]{0,1}[0-9]{0,1}[0-9]{0,1}\.[1-2]{0,1}[0-9]{0,1}[0-9]{1}\.[1-2]{0,1}[0-9]{0,1}[0-9]{1}\.[1-2]{0,1}[0-9]{0,1}[0-9]{1}/g);     
-        if(r){    
-                var len = r.length;
-                //console.log(len);
-                if(len > 1){
-                    for(let p = 0; p < len; p++){
-                        //console.log("****************");
-                        //console.log(r[p]);
-                        //console.log("*****************");                                
-                        selectnonrepeat(r[p], cognitousedips);
-                    }
-                }else{
-                    //console.log("///////////////");
-                    //console.log(r[0]);
-                    //console.log("//////////////");
-                    selectnonrepeat(r[0], cognitousedips);
-                }
-            }
-            removeprivateip(cognitousedips);
-    }
-}
 
 
 function fixtables(){
@@ -255,6 +228,22 @@ function fixtables(){
             if(kalayips.includes(ips)){
                 var tur = kalayips.indexOf(ips);
                 kalayips.splice(tur, 1);
+            }
+            if(tutkips.includes(ips)){
+                var tur = tutkips.indexOf(ips);
+                tutkips.splice(tur, 1);
+            }
+            if(ntpsips.includes(ips)){
+                var tur = ntpsips.indexOf(ips);
+                ntpsips.splice(tur, 1);
+            }
+            if(awsstaging.includes(ips)){
+                var tur = awsstaging.indexOf(ips);
+                awsstaging.splice(tur, 1);
+            }
+            if(ourpublicipadd.includes(ips)){
+                var tur = ourpublicipadd.indexOf(ips);
+                ourpublicipadd.splice(tur, 1);
             }
             if(listado.includes(ips)){
                 var her = listado.indexOf(ips);
@@ -271,10 +260,94 @@ function fixtables(){
                     if(listado.includes(kalay)){
                         var yor = listado.indexOf(kalay);
                         listado.splice(yor, 1);
-                    }
-    
+                    }    
+                }
+                for(let e = 0; e < tutkips.length; e++){
+                    var tutks = tutkips[e];
+                    if(listado.includes(tutks)){
+                        var hu = listado.indexOf(tutks);
+                        listado.splice(hu, 1);
+                    }    
+                }
+                for(let e = 0; e < ntpsips.length; e++){
+                    var ntps = ntpsips[e];
+                    if(listado.includes(ntps)){
+                        var ha = listado.indexOf(ntps);
+                        listado.splice(ha, 1);
+                    }    
+                }
+                for(let e = 0; e < awsstaging.length; e++){
+                    var ntps = awsstaging[e];
+                    if(listado.includes(ntps)){
+                        var ha = listado.indexOf(ntps);
+                        listado.splice(ha, 1);
+                    }    
+                }
+                for(let e = 0; e < ourpublicipadd.length; e++){
+                    var ntps = ourpublicipadd[e];
+                    if(listado.includes(ntps)){
+                        var ha = listado.indexOf(ntps);
+                        listado.splice(ha, 1);
+                    }    
                 }
             }
     }
 }
 
+
+
+
+
+function unkownscan(file){
+        for(let wr = 0; wr < salvalistado.length; wr++){
+            //console.log(salvalistado[wr]);
+            var je = salvalistado[wr];
+            //var tr = 67.225;
+            nane = `\\b(\\w*${je}\\w*)\\b`;
+            var cande = new RegExp(nane, "gi");
+    
+            //console.log(cande);
+            //var prefix = /\b(\w*67.225.\w*)\b/gi;
+            //detectlines(file, cande);
+            
+            let per = 0;
+            detectlines(file, cande, per, je)
+        }
+    
+       
+    
+}
+
+
+
+
+function detectlines(file, cande, per, je){
+    fs.readFile(file, 'utf8', function(err, data){
+        if(err){
+            console.log(err);
+        }else{
+            
+            //console.log(data);
+            var pra = per;
+            var tre = data.split('\n');
+            console.log("");
+            console.log("");
+            console.log("****************************************");
+            console.log("************* " + je + " *************");
+            console.log("****************************************");
+            for(let i = 0; i < tre.length; i++){
+                stre = tre[i];
+                //console.log(stre);
+                if(pra < 5){
+                    var tra = stre.match(cande);
+                    if(tra){
+                        console.log("_____");
+                        console.log(stre);
+                        pra += 1;
+                    
+                    }
+                }
+            }
+        }
+    });
+}
